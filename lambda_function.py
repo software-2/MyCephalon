@@ -482,6 +482,7 @@ class VorIntentHandler(AbstractRequestHandler):
                        "teach these trespassers the redemptive power of my Janus key. They will learn it's simple" \
                        " truth. The Tenno are lost, and they will resist. But I, Vor, will cleanse this place of" \
                        " their impurity."
+        speak_output = speak_output.replace("Janus", "<phoneme alphabet=\"ipa\" ph=\"jɑnəs\">Janus</phoneme>")
         return (
             handler_input.response_builder
                 .speak(speak_output)
