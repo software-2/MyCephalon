@@ -25,30 +25,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class GetNumberFactHandler(AbstractRequestHandler):
-    """Handler for get number fact intent."""
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
-        return (is_request_type("LaunchRequest")(handler_input) or
-            is_intent_name("GetNumberFactIntent")(handler_input))
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        logger.info("In GetNumberFactHandler")
-        the_number = None
-        if is_request_type("IntentRequest")(handler_input):
-            the_number = handler_input.request_envelope.request.intent.slots["number"].value
-        if the_number is None:
-            the_number = str(randint(1,11))
-        url = "http://numbersapi.com/" + the_number
-        response = requests.get(url)
-        if response.status_code == 200:
-            the_fact = response.text
-        else:
-            the_fact = "I had trouble getting a fact about " + the_number + ".";
-        speech = the_fact + " Would you like to hear another fact?"
-        handler_input.response_builder.speak(speech).ask(speech)
-        return handler_input.response_builder.response
-
 class WarframeAPIQuery():
 
     @staticmethod
@@ -250,20 +226,18 @@ class LaunchRequestHandler(AbstractRequestHandler):
         )
 
 
-class HelloWorldIntentHandler(AbstractRequestHandler):
+class CetusTimeIntentHandler(AbstractRequestHandler):
     """Handler for Hello World Intent."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("HelloWorldIntent")(handler_input)
+        return ask_utils.is_intent_name("CetusTimeIntent")(handler_input)
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Hello World!"
         speak_output = WarframeAPIQuery.cetus_time()
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                # .ask("add a reprompt if you want to keep the session open for the user to respond")
                 .response
         )
 
@@ -594,7 +568,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 sb = SkillBuilder()
 
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(HelloWorldIntentHandler())
+sb.add_request_handler(CetusTimeIntentHandler())
 sb.add_request_handler(CurrentArbitrationIntentHandler())
 sb.add_request_handler(SurvivalCountIntentHandler())
 sb.add_request_handler(CaptureCountIntentHandler())
