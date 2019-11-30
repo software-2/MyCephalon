@@ -28,19 +28,20 @@ logger.setLevel(logging.INFO)
 class WarframeAPIQuery():
 
     @staticmethod
-    def grabStatus():
-        url = "https://api.warframestat.us/pc/" + "cetusCycle"
-        response = requests.get(url)
-        if response.status_code == 200:
-            parsed_json = json.loads(response.text)
-            is_day = parsed_json['isDay']
-            if is_day:
-                return "It is currently daytime. Praise the Void!"
-            else:
-                return "It is night. The Void pulses with anticipation!"
-        else:
-            return "Error grabbing API"
+    def parse_hms(hms_string):
+        constructed_time = ""
+        if hms_string.find('h') == -1:
+            constructed_time = "0h " + hms_string
 
+        if hms_string.find('s') == -1:
+            constructed_time = constructed_time + "0s"
+
+        if hms_string.find('m') == -1:
+            datetime_object = datetime.strptime(constructed_time, '%Hh %Ss')
+        else:
+            datetime_object = datetime.strptime(constructed_time, '%Hh %Mm %Ss')
+
+        return datetime_object.hour * 60 + datetime_object.minute
 
 
     @staticmethod
@@ -68,7 +69,8 @@ class WarframeAPIQuery():
                 enemy= "<sub alias=\"grah near\">Grineer</sub>"
 
             if diff.total_seconds() > 0:
-                return "I'm not sure what the current Arbitration is - The API hasn't updated to the new one yet. But, the old one was " + enemy + " " + type + "."
+                return "I'm not sure what the current Arbitration is - The API hasn't updated to the new one yet. " \
+                       "But, the old one was " + enemy + " " + type + "."
 
             return "The current Arbitration is " + enemy + " " + type + "."
         else:
@@ -82,26 +84,37 @@ class WarframeAPIQuery():
             parsed_json = json.loads(response.text)
             is_day = parsed_json['isDay']
             time_remaining = parsed_json['timeLeft']
-
-            constructed_time = ""
-            if time_remaining.find('h') == -1:
-                constructed_time = "0h " + time_remaining
-
-            if time_remaining.find('s') == -1:
-                constructed_time = constructed_time + "0s"
-
-            if time_remaining.find('m') == -1:
-                datetime_object = datetime.strptime(constructed_time, '%Hh %Ss')
-            else:
-                datetime_object = datetime.strptime(constructed_time, '%Hh %Mm %Ss')
-
-            min_remaining = datetime_object.hour * 60 + datetime_object.minute
+            min_remaining = WarframeAPIQuery.parse_hms(time_remaining)
             if is_day:
                 return "It is currently daytime. There are " + str(min_remaining) + " minutes until night."
             else:
                 if min_remaining > 2:
                     return "It is night. There are " + str(min_remaining) + " minutes until day."
-                return "It is night. Sunrise nears. Sentient retreats. Strike now, for in moments, the future decides itself!"
+                return "It is night. Sunrise nears. Sentient retreats. " \
+                       "Strike now, for in moments, the future decides itself!"
+        else:
+            return "Error grabbing API"
+
+    @staticmethod
+    def fortuna_time():
+        url = "https://api.warframestat.us/pc/" + "vallisCycle"
+        response = requests.get(url)
+        if response.status_code == 200:
+            parsed_json = json.loads(response.text)
+            is_warm = parsed_json['isWarm']
+            time_remaining = parsed_json['timeLeft']
+            min_remaining = WarframeAPIQuery.parse_hms(time_remaining)
+
+            plural1 = "are"
+            plural2 = "minutes"
+            if min_remaining == 1:
+                plural1 = "is"
+                plural2 = "minute"
+            if is_warm:
+                return "It is currently warm. There " + plural1 + " " + str(min_remaining) + " " + plural2 +\
+                       " until it's cold."
+            else:
+                return "It is currently cold. There are " + str(min_remaining) + " minutes until it's warm."
         else:
             return "Error grabbing API"
 
@@ -227,7 +240,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
 
 class CetusTimeIntentHandler(AbstractRequestHandler):
-    """Handler for Hello World Intent."""
+    """Handler for Cetus Time Intent."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return ask_utils.is_intent_name("CetusTimeIntent")(handler_input)
@@ -235,6 +248,21 @@ class CetusTimeIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         speak_output = WarframeAPIQuery.cetus_time()
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class FortunaTimeIntentHandler(AbstractRequestHandler):
+    """Handler for Fortuna Time Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("FortunaTimeIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.fortuna_time()
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -463,6 +491,28 @@ class VorIntentHandler(AbstractRequestHandler):
                 .response
         )
 
+class GiveUntoTheVoidIntentHandler(AbstractRequestHandler):
+    """Handler for Give Unto The Void Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("GiveUntoTheVoidIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = "Scoundrels, heretics, believers! Listen! Do you crave redemption? Do you feel that " \
+                       "burden of poverty crushing you? You need relief. But how, How can you ask for help " \
+                       "unless you first help yourself! Give. Unto the Void. I was once a wretched crewman," \
+                       " breaking my back just to earn a credit. Then, I found that glorious energy. Oh, and" \
+                       " when I gave my first offering, how its richness rained down upon me! Do you want what" \
+                       " I have received? Do you want it for yourself? Then give. Unto the Void. Let your credits" \
+                       " be the seeds of your prosperity. Give unto the Void! And you will be rewarded a " \
+                       "hundredfold! The Void be the word, and the word be profit."
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
 
 
 class HelpIntentHandler(AbstractRequestHandler):
@@ -569,6 +619,7 @@ sb = SkillBuilder()
 
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(CetusTimeIntentHandler())
+sb.add_request_handler(FortunaTimeIntentHandler())
 sb.add_request_handler(CurrentArbitrationIntentHandler())
 sb.add_request_handler(SurvivalCountIntentHandler())
 sb.add_request_handler(CaptureCountIntentHandler())
@@ -584,6 +635,7 @@ sb.add_request_handler(SpyCountIntentHandler())
 sb.add_request_handler(HiveCountIntentHandler())
 
 sb.add_request_handler(VorIntentHandler())
+sb.add_request_handler(GiveUntoTheVoidIntentHandler())
 
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
