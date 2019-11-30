@@ -157,7 +157,10 @@ class WarframeAPIQuery():
             total = lith + meso + neo + axi + requiem
 
             if total == 0:
-                return "There are currently no " + fissure_type + " fissures active."
+                defection_egg = ""
+                if fissure_type == "Defection":
+                    defection_egg = "Really? You want to play Defection? ... "
+                return defection_egg + "There are currently no " + fissure_type + " fissures active."
 
             type_count = 0
             if lith > 0:
@@ -171,7 +174,12 @@ class WarframeAPIQuery():
             if requiem > 0:
                 type_count += 1
 
-            compiled = "There are " + str(total) + " " + fissure_type + " fissures active. "
+            plural1 = "are"
+            plural2 = "fissures"
+            if total == 1:
+                plural1 = "is"
+                plural2 = "fissure"
+            compiled = "There " + plural1 + " " + str(total) + " " + fissure_type + " " + plural2 + " active. "
             processed_count = 0
             if lith > 0:
                 compiled += str(lith) + " lith"
@@ -319,6 +327,168 @@ class InterceptionCountIntentHandler(AbstractRequestHandler):
                 .response
         )
 
+class DefenseCountIntentHandler(AbstractRequestHandler):
+    """Handler for Defense Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("DefenseCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Defense')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class MobileDefenseCountIntentHandler(AbstractRequestHandler):
+    """Handler for Mobile Defense Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("MobileDefenseCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Mobile Defense')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class SabotageCountIntentHandler(AbstractRequestHandler):
+    """Handler for Sabotage Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("SabotageCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Sabotage')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class RescueCountIntentHandler(AbstractRequestHandler):
+    """Handler for Rescue Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("RescueCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Rescue')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class DisruptionCountIntentHandler(AbstractRequestHandler):
+    """Handler for Disruption Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("DisruptionCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Disruption')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class ExterminateCountIntentHandler(AbstractRequestHandler):
+    """Handler for Exterminate Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("ExterminateCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Extermination')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class DefectionCountIntentHandler(AbstractRequestHandler):
+    """Handler for Defection Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("DefectionCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Defection')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class SpyCountIntentHandler(AbstractRequestHandler):
+    """Handler for Spy Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("SpyCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Spy')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class HiveCountIntentHandler(AbstractRequestHandler):
+    """Handler for Hive Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("HiveCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = WarframeAPIQuery.current_fissure('Hive')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class VorIntentHandler(AbstractRequestHandler):
+    """Handler for Vor Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("VorIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = "Look at them, they come to this place when they know they are not pure. Tenno use the keys, " \
+                       "but they are mere trespassers. Only I, Vor, know the true power of the Void. I was cut in " \
+                       "half, destroyed, but through it's Janus Key, the Void called to me. It brought me here and" \
+                       " here I was reborn. We cannot blame these creatures, they are being led by a false prophet," \
+                       " an impostor who knows not the secrets of the Void. Behold the Tenno, come to scavenge and " \
+                       "desecrate this sacred realm. My brothers, did I not tell of this day? Did I not prophesize " \
+                       "this moment? Now, I will stop them. Now I am changed, reborn through the energy of the Janus" \
+                       " Key. Forever bound to the Void. Let it be known, if the Tenno want true salvation, they" \
+                       " will lay down their arms, and wait for the baptism of my Janus key. It is time. I will " \
+                       "teach these trespassers the redemptive power of my Janus key. They will learn it's simple" \
+                       " truth. The Tenno are lost, and they will resist. But I, Vor, will cleanse this place of" \
+                       " their impurity."
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+
 
 class HelpIntentHandler(AbstractRequestHandler):
     """Handler for Help Intent."""
@@ -428,6 +598,18 @@ sb.add_request_handler(CurrentArbitrationIntentHandler())
 sb.add_request_handler(SurvivalCountIntentHandler())
 sb.add_request_handler(CaptureCountIntentHandler())
 sb.add_request_handler(InterceptionCountIntentHandler())
+sb.add_request_handler(DefenseCountIntentHandler())
+sb.add_request_handler(MobileDefenseCountIntentHandler())
+sb.add_request_handler(SabotageCountIntentHandler())
+sb.add_request_handler(RescueCountIntentHandler())
+sb.add_request_handler(DisruptionCountIntentHandler())
+sb.add_request_handler(ExterminateCountIntentHandler())
+sb.add_request_handler(DefectionCountIntentHandler())
+sb.add_request_handler(SpyCountIntentHandler())
+sb.add_request_handler(HiveCountIntentHandler())
+
+sb.add_request_handler(VorIntentHandler())
+
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
