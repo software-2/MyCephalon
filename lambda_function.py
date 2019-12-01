@@ -224,6 +224,26 @@ class WarframeAPIQuery():
         else:
             return "Error grabbing API"
 
+    @staticmethod
+    def invasions_worth_it(platform):
+        url = "https://api.warframestat.us/" + platform + "/" + "invasions"
+        response = requests.get(url)
+        if response.status_code == 200:
+            parsed_json = json.loads(response.text)
+
+            for invasion in parsed_json:
+                reward_types = invasion['rewardTypes']
+                percent = int(invasion['completion'])
+                for reward in reward_types:
+                    if reward == "reactor":
+                        return "Yes! There's a golden potato invasion! It's currently " + str(percent) + "% complete."
+                    if reward == "catalyst":
+                        return "Yes! There's a blue potato invasion! It's currently " + str(percent) + "% complete."
+                    if reward == "forma":
+                        return "Maybe? There's a forma invasion. It's currently " + str(percent) + "% complete. But why not just go run a single fissure?"
+            return "Nope, I wouldn't bother."
+        else:
+            return "Error grabbing API"
 
 
 def get_platform(handler_input):
@@ -520,6 +540,22 @@ class ExcavationCountIntentHandler(AbstractRequestHandler):
                 .response
         )
 
+class InvasionsWorthItIntentHandler(AbstractRequestHandler):
+    """Handler for Invasions Worth It Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("InvasionsWorthItIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.invasions_worth_it(platform)
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
 class VorIntentHandler(AbstractRequestHandler):
     """Handler for Vor Intent."""
     def can_handle(self, handler_input):
@@ -730,6 +766,8 @@ sb.add_request_handler(DefectionCountIntentHandler())
 sb.add_request_handler(SpyCountIntentHandler())
 sb.add_request_handler(HiveCountIntentHandler())
 sb.add_request_handler(ExcavationCountIntentHandler())
+
+sb.add_request_handler(InvasionsWorthItIntentHandler())
 
 sb.add_request_handler(VorIntentHandler())
 sb.add_request_handler(GiveUntoTheVoidIntentHandler())
