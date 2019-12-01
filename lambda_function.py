@@ -13,11 +13,16 @@ import requests
 import json
 from datetime import datetime
 
-from ask_sdk_core.skill_builder import SkillBuilder
+from ask_sdk_core.utils import is_intent_name, get_slot_value
+
+import os
+from ask_sdk_s3.adapter import S3Adapter
+s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
+
+from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
-from ask_sdk_core.utils import is_request_type, is_intent_name
 
 from ask_sdk_model import Response
 
@@ -45,8 +50,8 @@ class WarframeAPIQuery():
 
 
     @staticmethod
-    def current_arbitration():
-        url = "https://api.warframestat.us/pc/" + "arbitration"
+    def current_arbitration(platform):
+        url = "https://api.warframestat.us/" + platform + "/" + "arbitration"
         response = requests.get(url)
         if response.status_code == 200:
             parsed_json = json.loads(response.text)
@@ -77,8 +82,8 @@ class WarframeAPIQuery():
             return "Error grabbing API"
 
     @staticmethod
-    def cetus_time():
-        url = "https://api.warframestat.us/pc/" + "cetusCycle"
+    def cetus_time(platform):
+        url = "https://api.warframestat.us/" + platform + "/" + "cetusCycle"
         response = requests.get(url)
         if response.status_code == 200:
             parsed_json = json.loads(response.text)
@@ -96,8 +101,8 @@ class WarframeAPIQuery():
             return "Error grabbing API"
 
     @staticmethod
-    def fortuna_time():
-        url = "https://api.warframestat.us/pc/" + "vallisCycle"
+    def fortuna_time(platform):
+        url = "https://api.warframestat.us/" + platform + "/" + "vallisCycle"
         response = requests.get(url)
         if response.status_code == 200:
             parsed_json = json.loads(response.text)
@@ -119,8 +124,8 @@ class WarframeAPIQuery():
             return "Error grabbing API"
 
     @staticmethod
-    def current_fissure(fissure_type):
-        url = "https://api.warframestat.us/pc/" + "fissures"
+    def current_fissure(platform, fissure_type):
+        url = "https://api.warframestat.us/" + platform + "/" + "fissures"
         response = requests.get(url)
         if response.status_code == 200:
             parsed_json = json.loads(response.text)
@@ -220,6 +225,26 @@ class WarframeAPIQuery():
             return "Error grabbing API"
 
 
+
+def get_platform(handler_input):
+    attr = handler_input.attributes_manager.persistent_attributes
+
+    if "ChangePlatform" in attr:
+        platform = attr["ChangePlatform"]
+        if platform == "PC":
+            return "pc"
+        if platform == "Xbox":
+            return "xb1"
+        if platform == "PlayStation":
+            return "ps4"
+        if platform == "Switch":
+            return "swi"
+        return "pc"
+    else:
+        # This hasn't been set yet. Default to PC.
+        return "pc"
+
+
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
     def can_handle(self, handler_input):
@@ -247,7 +272,8 @@ class CetusTimeIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.cetus_time()
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.cetus_time(platform)
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -262,7 +288,8 @@ class FortunaTimeIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.fortuna_time()
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.fortuna_time(platform)
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -277,7 +304,8 @@ class CurrentArbitrationIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_arbitration()
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_arbitration(platform)
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -292,7 +320,8 @@ class SurvivalCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Survival')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Survival')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -307,7 +336,8 @@ class CaptureCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Capture')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Capture')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -322,7 +352,8 @@ class InterceptionCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Interception')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Interception')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -337,7 +368,8 @@ class DefenseCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Defense')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Defense')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -352,7 +384,8 @@ class MobileDefenseCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Mobile Defense')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Mobile Defense')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -367,7 +400,8 @@ class SabotageCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Sabotage')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Sabotage')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -382,7 +416,8 @@ class RescueCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Rescue')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Rescue')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -397,7 +432,8 @@ class DisruptionCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Disruption')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Disruption')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -412,7 +448,8 @@ class ExterminateCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Extermination')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Extermination')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -427,7 +464,8 @@ class DefectionCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Defection')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Defection')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -442,7 +480,8 @@ class SpyCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Spy')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Spy')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -457,7 +496,8 @@ class HiveCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = WarframeAPIQuery.current_fissure('Hive')
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Hive')
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -512,6 +552,45 @@ class GiveUntoTheVoidIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
+
+
+
+class ChangePlatformsIntentHandler(AbstractRequestHandler):
+    """Handler for Change Platforms Intent."""
+
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return is_intent_name("ChangePlatformsIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        slots = handler_input.request_envelope.request.intent.slots
+
+        if "ChangePlatform" in slots:
+            platform = slots["ChangePlatform"]
+
+            session_attr = handler_input.attributes_manager.session_attributes
+            session_attr["ChangePlatform"] = platform.value
+            handler_input.attributes_manager.persistent_attributes = session_attr
+            handler_input.attributes_manager.save_persistent_attributes()
+
+            speak_output =  "Okay, your platform is set to " + platform.value + \
+                            ". I'll give you info about that platform from now on."
+
+            return (
+                handler_input.response_builder
+                    .speak(speak_output)
+                    .response
+            )
+        else:
+            # This means the "don't worry about it, we'll handle it for you" dialog failed to handle it
+            speak_output = "Something's gone wrong. Please ask again."
+            return (
+                handler_input.response_builder
+                    .speak(speak_output)
+                    .response
+            )
 
 
 
@@ -614,8 +693,9 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 # payloads to the handlers above. Make sure any new handlers or interceptors you've
 # defined are included below. The order matters - they're processed top to bottom.
 
+sb = CustomSkillBuilder(persistence_adapter=s3_adapter)
 
-sb = SkillBuilder()
+sb.add_request_handler(ChangePlatformsIntentHandler())
 
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(CetusTimeIntentHandler())
