@@ -136,7 +136,7 @@ class WarframeAPIQuery():
             axi = 0
             requiem = 0
             for fissure in parsed_json:
-                if fissure['missionType'] == fissure_type:
+                if fissure_type in fissure['missionType']:
                     if fissure['tierNum'] == 1:
                         lith += 1
                     elif fissure['tierNum'] == 2:
@@ -237,7 +237,7 @@ def get_platform(handler_input):
             return "xb1"
         if platform == "PlayStation":
             return "ps4"
-        if platform == "Switch":
+        if platform == "switch":
             return "swi"
         return "pc"
     else:
@@ -504,6 +504,22 @@ class HiveCountIntentHandler(AbstractRequestHandler):
                 .response
         )
 
+class ExcavationCountIntentHandler(AbstractRequestHandler):
+    """Handler for Excavation Count Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("ExcavationCountIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.current_fissure(platform, 'Excavation')
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
 class VorIntentHandler(AbstractRequestHandler):
     """Handler for Vor Intent."""
     def can_handle(self, handler_input):
@@ -713,6 +729,7 @@ sb.add_request_handler(ExterminateCountIntentHandler())
 sb.add_request_handler(DefectionCountIntentHandler())
 sb.add_request_handler(SpyCountIntentHandler())
 sb.add_request_handler(HiveCountIntentHandler())
+sb.add_request_handler(ExcavationCountIntentHandler())
 
 sb.add_request_handler(VorIntentHandler())
 sb.add_request_handler(GiveUntoTheVoidIntentHandler())
