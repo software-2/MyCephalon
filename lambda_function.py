@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 
 import ask_sdk_core.utils as ask_utils
-from ask_sdk_core.utils import is_intent_name, get_slot_value
+from ask_sdk_core.utils import is_intent_name
 from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
@@ -61,11 +61,10 @@ class WarframeAPIQuery:
             if minutes == 1:
                 plural_minute = "minute"
             if hours > 0:
-                hours_string = str(hours) + "hours and "
+                hours_string = str(hours) + " " + plural_hour + " and "
             else:
                 hours_string = ""
             return hours_string + str(minutes) + " " + plural_minute
-
 
     @staticmethod
     def current_arbitration(platform):
@@ -78,7 +77,8 @@ class WarframeAPIQuery:
             diff = datetime.now() - datetime_object
 
             # I got one response that was:
-            #{"activation":"2019-11-30T16:05:00.000Z","expiry":"2019-11-30T17:05:00.000Z","solnode":"SolNode308","node":"undefined (undefined)","type":"Disruption"}
+            # {"activation":"2019-11-30T16:05:00.000Z","expiry":"2019-11-30T17:05:00.000Z","solnode":"SolNode308",
+            # "node":"undefined (undefined)","type":"Disruption"}
             # So handling that bug as gracefully as I can
 
             if 'enemy' in parsed_json:
@@ -162,7 +162,8 @@ class WarframeAPIQuery:
                 diff = datetime_object - datetime.now()
                 remaining = WarframeAPIQuery.generate_english_time(diff)
 
-                return baro + " is here! He's at the " + relay + " on " + planet + ". He'll be here for another " + remaining + "."
+                return baro + " is here! He's at the " + relay + " on " + planet + ". He'll be here for " \
+                                                                                   "another " + remaining + "."
             else:
                 return baro + " is not here right now."
 
@@ -286,7 +287,8 @@ class WarframeAPIQuery:
                     if reward == "catalyst":
                         return "Yes! There's a blue potato invasion! It's currently " + str(percent) + "% complete."
                     if reward == "forma":
-                        return "Maybe? There's a forma invasion. It's currently " + str(percent) + "% complete. But why not just go run a single fissure?"
+                        return "Maybe? There's a forma invasion. It's currently " + str(percent) + \
+                               "% complete. But why not just go run a single fissure?"
             return "Nope, I wouldn't bother."
         else:
             return "Error grabbing API"
@@ -335,9 +337,9 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
+                         .speak(speak_output)
+                         .ask(speak_output)
+                         .response
         )
 
 
@@ -354,8 +356,8 @@ class CetusTimeIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.cetus_time(platform)
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -372,8 +374,8 @@ class FortunaTimeIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.fortuna_time(platform)
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -390,8 +392,8 @@ class VoidTraderTimeIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.void_trader_time(platform)
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -408,8 +410,8 @@ class CurrentArbitrationIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_arbitration(platform)
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -426,8 +428,8 @@ class SurvivalCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Survival')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -444,8 +446,8 @@ class CaptureCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Capture')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -462,8 +464,8 @@ class InterceptionCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Interception')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -480,8 +482,8 @@ class DefenseCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Defense')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -498,8 +500,8 @@ class MobileDefenseCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Mobile Defense')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -516,8 +518,8 @@ class SabotageCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Sabotage')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -534,8 +536,8 @@ class RescueCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Rescue')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -552,8 +554,8 @@ class DisruptionCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Disruption')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -570,8 +572,8 @@ class ExterminateCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Extermination')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -587,8 +589,8 @@ class DefectionCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Defection')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -605,8 +607,8 @@ class SpyCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Spy')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -623,8 +625,8 @@ class HiveCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Hive')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -641,8 +643,8 @@ class ExcavationCountIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Excavation')
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -659,8 +661,8 @@ class InvasionsWorthItIntentHandler(AbstractRequestHandler):
         speak_output = WarframeAPIQuery.invasions_worth_it(platform)
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -688,8 +690,8 @@ class VorIntentHandler(AbstractRequestHandler):
         speak_output = speak_output.replace("Janus", "<phoneme alphabet=\"ipa\" ph=\"jɑnəs\">Janus</phoneme>")
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -712,8 +714,8 @@ class GiveUntoTheVoidIntentHandler(AbstractRequestHandler):
                        "hundredfold! The Void be the word, and the word be profit."
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -764,9 +766,9 @@ class HelpIntentHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
+                         .speak(speak_output)
+                         .ask(speak_output)
+                         .response
         )
 
 
@@ -783,8 +785,8 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -819,9 +821,8 @@ class IntentReflectorHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                # .ask("add a reprompt if you want to keep the session open for the user to respond")
-                .response
+                         .speak(speak_output)
+                         .response
         )
 
 
@@ -842,9 +843,9 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
+                         .speak(speak_output)
+                         .ask(speak_output)
+                         .response
         )
 
 # The SkillBuilder object acts as the entry point for your skill, routing all request and response
@@ -884,7 +885,8 @@ sb.add_request_handler(GiveUntoTheVoidIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
-sb.add_request_handler(IntentReflectorHandler()) # make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+# make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+sb.add_request_handler(IntentReflectorHandler())
 
 sb.add_exception_handler(CatchAllExceptionHandler())
 
