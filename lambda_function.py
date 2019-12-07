@@ -1,36 +1,27 @@
 # -*- coding: utf-8 -*-
 
-# This sample demonstrates handling intents from an Alexa skill using the Alexa Skills Kit SDK for Python.
-# Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
-# session persistence, api calls, and more.
-# This sample is built using the handler classes approach in skill builder.
-import logging
-from random import randint
-
-import ask_sdk_core.utils as ask_utils
-
+import os
 import requests
 import json
+import math
+import logging
 from datetime import datetime
 
+import ask_sdk_core.utils as ask_utils
 from ask_sdk_core.utils import is_intent_name, get_slot_value
-
-import os
-from ask_sdk_s3.adapter import S3Adapter
-s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
-
 from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
-
 from ask_sdk_model import Response
+from ask_sdk_s3.adapter import S3Adapter
 
+s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class WarframeAPIQuery():
+class WarframeAPIQuery:
 
     @staticmethod
     def parse_hms(hms_string):
@@ -47,6 +38,33 @@ class WarframeAPIQuery():
             datetime_object = datetime.strptime(constructed_time, '%Hh %Mm %Ss')
 
         return datetime_object.hour * 60 + datetime_object.minute
+
+    @staticmethod
+    def generate_english_time(diff):
+        # The general concept here is to avoid "Spock Over-Accuracy"
+        if diff.days > 0:
+            sub_hours = (diff.seconds - 86400) / 60 / 60
+            plural_day = "days"
+            if diff.days == 1:
+                plural_day = "day"
+            plural_hour = "hours"
+            if sub_hours == 1:
+                plural_hour = "hour"
+            return str(diff.days) + " " + plural_day + " and " + str(sub_hours) + plural_hour
+        else:
+            hours = math.floor(diff.seconds / 60 / 60)
+            plural_hour = "hours"
+            if hours == 1:
+                plural_hour = "hour"
+            minutes = math.floor((diff.seconds / 60) - (hours * 60))
+            plural_minute = "minutes"
+            if minutes == 1:
+                plural_minute = "minute"
+            if hours > 0:
+                hours_string = str(hours) + "hours and "
+            else:
+                hours_string = ""
+            return hours_string + str(minutes) + " " + plural_minute
 
 
     @staticmethod
@@ -68,16 +86,16 @@ class WarframeAPIQuery():
             else:
                 enemy = ""
 
-            type = parsed_json['type']
+            mode_type = parsed_json['type']
 
             if enemy == "Grineer":
-                enemy= "<sub alias=\"grah near\">Grineer</sub>"
+                enemy = "<sub alias=\"grah near\">Grineer</sub>"
 
             if diff.total_seconds() > 0:
                 return "I'm not sure what the current Arbitration is - The API hasn't updated to the new one yet. " \
-                       "But, the old one was " + enemy + " " + type + "."
+                       "But, the old one was " + enemy + " " + mode_type + "."
 
-            return "The current Arbitration is " + enemy + " " + type + "."
+            return "The current Arbitration is " + enemy + " " + mode_type + "."
         else:
             return "Error grabbing API"
 
@@ -120,6 +138,34 @@ class WarframeAPIQuery():
                        " until it's cold."
             else:
                 return "It is currently cold. There are " + str(min_remaining) + " minutes until it's warm."
+        else:
+            return "Error grabbing API"
+
+    @staticmethod
+    def void_trader_time(platform):
+        url = "https://api.warframestat.us/" + platform + "/" + "voidTrader"
+        response = requests.get(url)
+        if response.status_code == 200:
+            parsed_json = json.loads(response.text)
+            is_active = parsed_json['active']
+            start_time = parsed_json['activation']
+            end_time = parsed_json['expiry']
+            location = parsed_json['location']
+
+            baro = "<phoneme alphabet=\"ipa\" ph=\"bero\">Baro</phoneme>"
+
+            if is_active:
+                relay = location[0:location.find("(")-1]
+                planet = location[location.find("(")+1:location.find(")")]
+
+                datetime_object = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.000Z')
+                diff = datetime_object - datetime.now()
+                remaining = WarframeAPIQuery.generate_english_time(diff)
+
+                return baro + " is here! He's at the " + relay + " on " + planet + ". He'll be here for another " + remaining + "."
+            else:
+                return baro + " is not here right now."
+
         else:
             return "Error grabbing API"
 
@@ -315,6 +361,24 @@ class FortunaTimeIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
+
+class VoidTraderTimeIntentHandler(AbstractRequestHandler):
+    """Handler for Void Trader Time Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("VoidTraderTimeIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.void_trader_time(platform)
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
 
 class CurrentArbitrationIntentHandler(AbstractRequestHandler):
     """Handler for Current Arbitration Intent."""
@@ -745,6 +809,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 # payloads to the handlers above. Make sure any new handlers or interceptors you've
 # defined are included below. The order matters - they're processed top to bottom.
 
+
 sb = CustomSkillBuilder(persistence_adapter=s3_adapter)
 
 sb.add_request_handler(ChangePlatformsIntentHandler())
@@ -752,7 +817,9 @@ sb.add_request_handler(ChangePlatformsIntentHandler())
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(CetusTimeIntentHandler())
 sb.add_request_handler(FortunaTimeIntentHandler())
+sb.add_request_handler(VoidTraderTimeIntentHandler())
 sb.add_request_handler(CurrentArbitrationIntentHandler())
+
 sb.add_request_handler(SurvivalCountIntentHandler())
 sb.add_request_handler(CaptureCountIntentHandler())
 sb.add_request_handler(InterceptionCountIntentHandler())
