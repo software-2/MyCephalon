@@ -295,8 +295,8 @@ class WarframeAPIQuery:
 def get_platform(handler_input):
     attr = handler_input.attributes_manager.persistent_attributes
 
-    if "ChangePlatform" in attr:
-        platform = attr["ChangePlatform"]
+    if "Platform" in attr:
+        platform = attr["Platform"]
         if platform == "PC":
             return "pc"
         if platform == "Xbox":
@@ -309,6 +309,17 @@ def get_platform(handler_input):
     else:
         # This hasn't been set yet. Default to PC.
         return "pc"
+
+
+def increment_usage_count(handler_input):
+    persistent_attr = handler_input.attributes_manager.persistent_attributes
+
+    usage_count = 1
+    if "UsageCount" in persistent_attr:
+        usage_count += int(persistent_attr["UsageCount"])
+
+    persistent_attr["UsageCount"] = usage_count
+    handler_input.attributes_manager.save_persistent_attributes()
 
 
 class LaunchRequestHandler(AbstractRequestHandler):
@@ -338,6 +349,7 @@ class CetusTimeIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.cetus_time(platform)
         return (
@@ -345,6 +357,7 @@ class CetusTimeIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class FortunaTimeIntentHandler(AbstractRequestHandler):
     """Handler for Fortuna Time Intent."""
@@ -354,6 +367,7 @@ class FortunaTimeIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.fortuna_time(platform)
         return (
@@ -371,6 +385,7 @@ class VoidTraderTimeIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.void_trader_time(platform)
         return (
@@ -388,6 +403,7 @@ class CurrentArbitrationIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_arbitration(platform)
         return (
@@ -395,6 +411,7 @@ class CurrentArbitrationIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class SurvivalCountIntentHandler(AbstractRequestHandler):
     """Handler for Survival Count Intent."""
@@ -404,6 +421,7 @@ class SurvivalCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Survival')
         return (
@@ -411,6 +429,7 @@ class SurvivalCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class CaptureCountIntentHandler(AbstractRequestHandler):
     """Handler for Capture Count Intent."""
@@ -420,6 +439,7 @@ class CaptureCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Capture')
         return (
@@ -427,6 +447,7 @@ class CaptureCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class InterceptionCountIntentHandler(AbstractRequestHandler):
     """Handler for Interception Count Intent."""
@@ -436,6 +457,7 @@ class InterceptionCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Interception')
         return (
@@ -443,6 +465,7 @@ class InterceptionCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class DefenseCountIntentHandler(AbstractRequestHandler):
     """Handler for Defense Count Intent."""
@@ -452,6 +475,7 @@ class DefenseCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Defense')
         return (
@@ -459,6 +483,7 @@ class DefenseCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class MobileDefenseCountIntentHandler(AbstractRequestHandler):
     """Handler for Mobile Defense Count Intent."""
@@ -468,6 +493,7 @@ class MobileDefenseCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Mobile Defense')
         return (
@@ -475,6 +501,7 @@ class MobileDefenseCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class SabotageCountIntentHandler(AbstractRequestHandler):
     """Handler for Sabotage Count Intent."""
@@ -484,6 +511,7 @@ class SabotageCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Sabotage')
         return (
@@ -491,6 +519,7 @@ class SabotageCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class RescueCountIntentHandler(AbstractRequestHandler):
     """Handler for Rescue Count Intent."""
@@ -500,6 +529,7 @@ class RescueCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Rescue')
         return (
@@ -507,6 +537,7 @@ class RescueCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class DisruptionCountIntentHandler(AbstractRequestHandler):
     """Handler for Disruption Count Intent."""
@@ -516,6 +547,7 @@ class DisruptionCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Disruption')
         return (
@@ -523,6 +555,7 @@ class DisruptionCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class ExterminateCountIntentHandler(AbstractRequestHandler):
     """Handler for Exterminate Count Intent."""
@@ -532,6 +565,7 @@ class ExterminateCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Extermination')
         return (
@@ -539,6 +573,7 @@ class ExterminateCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class DefectionCountIntentHandler(AbstractRequestHandler):
     """Handler for Defection Count Intent."""
@@ -556,6 +591,7 @@ class DefectionCountIntentHandler(AbstractRequestHandler):
                 .response
         )
 
+
 class SpyCountIntentHandler(AbstractRequestHandler):
     """Handler for Spy Count Intent."""
     def can_handle(self, handler_input):
@@ -564,6 +600,7 @@ class SpyCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Spy')
         return (
@@ -571,6 +608,7 @@ class SpyCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class HiveCountIntentHandler(AbstractRequestHandler):
     """Handler for Hive Count Intent."""
@@ -580,6 +618,7 @@ class HiveCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Hive')
         return (
@@ -587,6 +626,7 @@ class HiveCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class ExcavationCountIntentHandler(AbstractRequestHandler):
     """Handler for Excavation Count Intent."""
@@ -596,6 +636,7 @@ class ExcavationCountIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.current_fissure(platform, 'Excavation')
         return (
@@ -603,6 +644,7 @@ class ExcavationCountIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class InvasionsWorthItIntentHandler(AbstractRequestHandler):
     """Handler for Invasions Worth It Intent."""
@@ -612,6 +654,7 @@ class InvasionsWorthItIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         platform = get_platform(handler_input)
         speak_output = WarframeAPIQuery.invasions_worth_it(platform)
         return (
@@ -619,6 +662,7 @@ class InvasionsWorthItIntentHandler(AbstractRequestHandler):
                 .speak(speak_output)
                 .response
         )
+
 
 class VorIntentHandler(AbstractRequestHandler):
     """Handler for Vor Intent."""
@@ -628,6 +672,7 @@ class VorIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         speak_output = "Look at them, they come to this place when they know they are not pure. Tenno use the keys, " \
                        "but they are mere trespassers. Only I, Vor, know the true power of the Void. I was cut in " \
                        "half, destroyed, but through it's Janus Key, the Void called to me. It brought me here and" \
@@ -647,6 +692,7 @@ class VorIntentHandler(AbstractRequestHandler):
                 .response
         )
 
+
 class GiveUntoTheVoidIntentHandler(AbstractRequestHandler):
     """Handler for Give Unto The Void Intent."""
     def can_handle(self, handler_input):
@@ -655,6 +701,7 @@ class GiveUntoTheVoidIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
         speak_output = "Scoundrels, heretics, believers! Listen! Do you crave redemption? Do you feel that " \
                        "burden of poverty crushing you? You need relief. But how, How can you ask for help " \
                        "unless you first help yourself! Give. Unto the Void. I was once a wretched crewman," \
@@ -670,8 +717,6 @@ class GiveUntoTheVoidIntentHandler(AbstractRequestHandler):
         )
 
 
-
-
 class ChangePlatformsIntentHandler(AbstractRequestHandler):
     """Handler for Change Platforms Intent."""
 
@@ -683,31 +728,28 @@ class ChangePlatformsIntentHandler(AbstractRequestHandler):
         # type: (HandlerInput) -> Response
         slots = handler_input.request_envelope.request.intent.slots
 
-        if "ChangePlatform" in slots:
-            platform = slots["ChangePlatform"]
+        if "Platform" in slots:
+            platform = slots["Platform"].value
 
-            session_attr = handler_input.attributes_manager.session_attributes
-            session_attr["ChangePlatform"] = platform.value
-            handler_input.attributes_manager.persistent_attributes = session_attr
+            handler_input.attributes_manager.persistent_attributes["Platform"] = platform
             handler_input.attributes_manager.save_persistent_attributes()
 
-            speak_output =  "Okay, your platform is set to " + platform.value + \
-                            ". I'll give you info about that platform from now on."
+            speak_output = "Okay, your platform is set to " + platform + \
+                           ". I'll give you info about that platform from now on."
 
             return (
                 handler_input.response_builder
-                    .speak(speak_output)
-                    .response
+                             .speak(speak_output)
+                             .response
             )
         else:
             # This means the "don't worry about it, we'll handle it for you" dialog failed to handle it
             speak_output = "Something's gone wrong. Please ask again."
             return (
                 handler_input.response_builder
-                    .speak(speak_output)
-                    .response
+                             .speak(speak_output)
+                             .response
             )
-
 
 
 class HelpIntentHandler(AbstractRequestHandler):
