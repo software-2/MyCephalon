@@ -782,6 +782,18 @@ class HelpIntentHandler(AbstractRequestHandler):
                        "check if there's a rare Invasion going on, ask: Are there any Invasions worth doing? By " \
                        "default, I'll give you information on the PC version of the game. If you want to switch to" \
                        " a console just say \"Change platforms\". So, what would you like?"
+
+        help_samples = "What is the current Arbitration?\nWhat is the weather in the Orb Vallis?\nHow long until " \
+                       "it's night in Cetus?\nHow long until Baro arrives?\nHow many survivals are there?\nAre " \
+                       "there any Invasions worth doing?"
+
+        if hasattr(handler_input.request_envelope.context.system.device.supported_interfaces, 'display'):
+            return (handler_input.response_builder
+                    .set_card(SimpleCard("Example Questions", help_samples))
+                    .speak(speak_output)
+                    .response
+                    )
+
         return (
             handler_input.response_builder
                          .speak(speak_output)
