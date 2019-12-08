@@ -14,11 +14,8 @@ from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
+from ask_sdk_model.ui import SimpleCard
 from ask_sdk_s3.adapter import S3Adapter
-
-s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class WarframeAPIQuery:
@@ -333,7 +330,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Welcome, you can say Hello or Help. Which would you like to try?"
+        speak_output = "Welcome to The Void. If you need help, just say \"help\", otherwise what can I do for you?"
 
         return (
             handler_input.response_builder
@@ -675,19 +672,27 @@ class VorIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         increment_usage_count(handler_input)
-        speak_output = "Look at them, they come to this place when they know they are not pure. Tenno use the keys, " \
-                       "but they are mere trespassers. Only I, Vor, know the true power of the Void. I was cut in " \
-                       "half, destroyed, but through it's Janus Key, the Void called to me. It brought me here and" \
-                       " here I was reborn. We cannot blame these creatures, they are being led by a false prophet," \
-                       " an impostor who knows not the secrets of the Void. Behold the Tenno, come to scavenge and " \
-                       "desecrate this sacred realm. My brothers, did I not tell of this day? Did I not prophesize " \
-                       "this moment? Now, I will stop them. Now I am changed, reborn through the energy of the Janus" \
-                       " Key. Forever bound to the Void. Let it be known, if the Tenno want true salvation, they" \
-                       " will lay down their arms, and wait for the baptism of my Janus key. It is time. I will " \
-                       "teach these trespassers the redemptive power of my Janus key. They will learn it's simple" \
-                       " truth. The Tenno are lost, and they will resist. But I, Vor, will cleanse this place of" \
-                       " their impurity."
-        speak_output = speak_output.replace("Janus", "<phoneme alphabet=\"ipa\" ph=\"jɑnəs\">Janus</phoneme>")
+        vor_pasta = "Look at them, they come to this place when they know they are not pure. Tenno use the keys, " \
+                    "but they are mere trespassers. Only I, Vor, know the true power of the Void. I was cut in " \
+                    "half, destroyed, but through it's Janus Key, the Void called to me. It brought me here and" \
+                    " here I was reborn. We cannot blame these creatures, they are being led by a false prophet," \
+                    " an impostor who knows not the secrets of the Void. Behold the Tenno, come to scavenge and " \
+                    "desecrate this sacred realm. My brothers, did I not tell of this day? Did I not prophesize " \
+                    "this moment? Now, I will stop them. Now I am changed, reborn through the energy of the Janus" \
+                    " Key. Forever bound to the Void. Let it be known, if the Tenno want true salvation, they" \
+                    " will lay down their arms, and wait for the baptism of my Janus key. It is time. I will " \
+                    "teach these trespassers the redemptive power of my Janus key. They will learn it's simple" \
+                    " truth. The Tenno are lost, and they will resist. But I, Vor, will cleanse this place of" \
+                    " their impurity."
+        speak_output = vor_pasta.replace("Janus", "<phoneme alphabet=\"ipa\" ph=\"jɑnəs\">Janus</phoneme>")
+
+        if hasattr(handler_input.request_envelope.context.system.device.supported_interfaces, 'display'):
+            return (handler_input.response_builder
+                    .set_card(SimpleCard("Vor", vor_pasta))
+                    .speak(speak_output)
+                    .response
+                    )
+
         return (
             handler_input.response_builder
                          .speak(speak_output)
@@ -712,6 +717,14 @@ class GiveUntoTheVoidIntentHandler(AbstractRequestHandler):
                        " I have received? Do you want it for yourself? Then give. Unto the Void. Let your credits" \
                        " be the seeds of your prosperity. Give unto the Void! And you will be rewarded a " \
                        "hundredfold! The Void be the word, and the word be profit."
+
+        if hasattr(handler_input.request_envelope.context.system.device.supported_interfaces, 'display'):
+            return (handler_input.response_builder
+                    .set_card(SimpleCard("Nef Anyo", speak_output))
+                    .speak(speak_output)
+                    .response
+                    )
+
         return (
             handler_input.response_builder
                          .speak(speak_output)
@@ -762,8 +775,13 @@ class HelpIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "You can say hello to me! How can I help?"
-
+        speak_output = "You can ask me about many things in Warframe. For example: What is the current Arbitration? " \
+                       "What is the weather in the Orb Vallis? How long until it's night in Cetus? How long until " \
+                       "<phoneme alphabet=\"ipa\" ph=\"bero\">Baro</phoneme> arrives? If you want to know about a " \
+                       "specific fissure type, ask something like: How many survivals are there? If you want to " \
+                       "check if there's a rare Invasion going on, ask: Are there any Invasions worth doing? By " \
+                       "default, I'll give you information on the PC version of the game. If you want to switch to" \
+                       " a console just say \"Change platforms\". So, what would you like?"
         return (
             handler_input.response_builder
                          .speak(speak_output)
@@ -848,11 +866,14 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
                          .response
         )
 
+
+s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 # The SkillBuilder object acts as the entry point for your skill, routing all request and response
 # payloads to the handlers above. Make sure any new handlers or interceptors you've
 # defined are included below. The order matters - they're processed top to bottom.
-
-
 sb = CustomSkillBuilder(persistence_adapter=s3_adapter)
 
 sb.add_request_handler(ChangePlatformsIntentHandler())
