@@ -21,22 +21,6 @@ from ask_sdk_s3.adapter import S3Adapter
 class WarframeAPIQuery:
 
     @staticmethod
-    def parse_hms(hms_string):
-        constructed_time = ""
-        if hms_string.find('h') == -1:
-            constructed_time = "0h " + hms_string
-
-        if hms_string.find('s') == -1:
-            constructed_time = constructed_time + "0s"
-
-        if hms_string.find('m') == -1:
-            datetime_object = datetime.strptime(constructed_time, '%Hh %Ss')
-        else:
-            datetime_object = datetime.strptime(constructed_time, '%Hh %Mm %Ss')
-
-        return datetime_object.hour * 60 + datetime_object.minute
-
-    @staticmethod
     def generate_english_time(diff):
         # The general concept here is to avoid "Spock Over-Accuracy"
         if diff.days > 0:
@@ -103,13 +87,17 @@ class WarframeAPIQuery:
         if response.status_code == 200:
             parsed_json = json.loads(response.text)
             is_day = parsed_json['isDay']
-            time_remaining = parsed_json['timeLeft']
-            min_remaining = WarframeAPIQuery.parse_hms(time_remaining)
+            expiry = parsed_json['expiry']
+            datetime_object = datetime.strptime(expiry, '%Y-%m-%dT%H:%M:%S.000Z')
+            diff = datetime_object - datetime.now()
+            remaining = WarframeAPIQuery.generate_english_time(diff)
+            min_remaining = diff.seconds / 60
+
             if is_day:
-                return "It is currently daytime. There are " + str(min_remaining) + " minutes until night."
+                return "It is currently daytime. There are " + remaining + " until night."
             else:
                 if min_remaining > 2:
-                    return "It is night. There are " + str(min_remaining) + " minutes until day."
+                    return "It is night. There are " + remaining + " until day."
                 return "It is night. Sunrise nears. Sentient retreats. " \
                        "Strike now, for in moments, the future decides itself!"
         else:
@@ -122,19 +110,19 @@ class WarframeAPIQuery:
         if response.status_code == 200:
             parsed_json = json.loads(response.text)
             is_warm = parsed_json['isWarm']
-            time_remaining = parsed_json['timeLeft']
-            min_remaining = WarframeAPIQuery.parse_hms(time_remaining)
+            expiry = parsed_json['expiry']
+            datetime_object = datetime.strptime(expiry, '%Y-%m-%dT%H:%M:%S.000Z')
+            diff = datetime_object - datetime.now()
+            remaining = WarframeAPIQuery.generate_english_time(diff)
+            min_remaining = math.floor(diff.seconds / 60)
 
-            plural1 = "are"
-            plural2 = "minutes"
+            plural = "are"
             if min_remaining == 1:
-                plural1 = "is"
-                plural2 = "minute"
+                plural = "is"
             if is_warm:
-                return "It is currently warm. There " + plural1 + " " + str(min_remaining) + " " + plural2 +\
-                       " until it's cold."
+                return "It is currently warm. There " + plural + " " + remaining + " until it's cold."
             else:
-                return "It is currently cold. There are " + str(min_remaining) + " minutes until it's warm."
+                return "It is currently cold. There " + plural + " " + remaining + " until it's warm."
         else:
             return "Error grabbing API"
 
@@ -667,7 +655,7 @@ class VorIntentHandler(AbstractRequestHandler):
     """Handler for Vor Intent."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("VorIntent")(handler_input)
+        return ask_utils.is_intent_name("VorIntent")(handler_input) or ask_utils.is_request_type('CanFulfillIntentRequest')
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
@@ -912,8 +900,8 @@ sb.add_request_handler(ExcavationCountIntentHandler())
 
 sb.add_request_handler(InvasionsWorthItIntentHandler())
 
-sb.add_request_handler(VorIntentHandler())
 sb.add_request_handler(GiveUntoTheVoidIntentHandler())
+sb.add_request_handler(VorIntentHandler())
 
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
