@@ -14,6 +14,7 @@ from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
+from ask_sdk_model.canfulfill import CanFulfillIntent, CanFulfillIntentValues
 from ask_sdk_model.ui import SimpleCard
 from ask_sdk_s3.adapter import S3Adapter
 
@@ -275,6 +276,46 @@ class WarframeAPIQuery:
                         return "Maybe? There's a forma invasion. It's currently " + str(percent) + \
                                "% complete. But why not just go run a single fissure?"
             return "Nope, I wouldn't bother."
+        else:
+            return "Error grabbing API"
+
+
+    @staticmethod
+    def railjack_sentients(platform):
+        #Not added to the good API yet, so we're using the massive blob
+        url = "http://content.warframe.com/dynamic/worldState.php"
+        if platform != "pc":
+            return "Sorry, Railjack is for beta testers only."
+
+        response = requests.get(url)
+        if response.status_code == 200:
+            parsed_json = json.loads(response.text)
+            railjack_info = parsed_json["Tmp"]
+            if "sfn" not in railjack_info:
+                return "The Sentient ship is not currently here."
+
+            sfn = int(railjack_info["sfn"])
+            if sfn == 505:
+                node_name = "Ruse War Field"
+            elif sfn == 510:
+                node_name = "Gian Point"
+            elif sfn == 550:
+                node_name = "Nsu Grid"
+            elif sfn == 551:
+                node_name = "Ganalen's Grave"
+            elif sfn == 552:
+                node_name = "Rya"
+            elif sfn == 553:
+                node_name = "Flexa"
+            elif sfn == 554:
+                node_name = "H-2 Cloud"
+            elif sfn == 555:
+                node_name = "R-9 Cloud"
+            else:
+                node_name = "a node I don't know the name of"
+
+            return "The Sentient ship is here! It's located at " + node_name + "."
+
         else:
             return "Error grabbing API"
 
@@ -651,11 +692,29 @@ class InvasionsWorthItIntentHandler(AbstractRequestHandler):
         )
 
 
+class RailjackSentientIntentHandler(AbstractRequestHandler):
+    """Handler for Railjack Sentients Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("RailjackSentientIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.railjack_sentients(platform)
+        return (
+            handler_input.response_builder
+                         .speak(speak_output)
+                         .response
+        )
+
+
 class VorIntentHandler(AbstractRequestHandler):
     """Handler for Vor Intent."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("VorIntent")(handler_input) or ask_utils.is_request_type('CanFulfillIntentRequest')
+        return ask_utils.is_intent_name("VorIntent")(handler_input)
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
@@ -779,6 +838,7 @@ class HelpIntentHandler(AbstractRequestHandler):
             return (handler_input.response_builder
                     .set_card(SimpleCard("Example Questions", help_samples))
                     .speak(speak_output)
+                    .ask(speak_output)
                     .response
                     )
 
@@ -786,6 +846,32 @@ class HelpIntentHandler(AbstractRequestHandler):
             handler_input.response_builder
                          .speak(speak_output)
                          .ask(speak_output)
+                         .response
+        )
+
+
+class CanFulfillIntentRequestHandler(AbstractRequestHandler):
+    """Handler for CanFulfillIntentRequest."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_request_type('CanFulfillIntentRequest')(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+
+        # Defaulting to yes may be too extreme. Revisit after some analytics acquired.
+        can_fulfill = CanFulfillIntent(CanFulfillIntentValues.YES)
+        if (ask_utils.is_intent_name("VorIntent")(handler_input) or
+            ask_utils.is_intent_name("GiveUntoTheVoidIntent")(handler_input)
+        ):
+            can_fulfill = CanFulfillIntent(CanFulfillIntentValues.YES)
+        elif (ask_utils.is_intent_name("ChangePlatformsIntent")(handler_input)
+        ):
+            can_fulfill = CanFulfillIntent(CanFulfillIntentValues.NO)
+
+        return (
+            handler_input.response_builder
+                         .set_can_fulfill_intent(can_fulfill)
                          .response
         )
 
@@ -876,9 +962,12 @@ logger.setLevel(logging.INFO)
 # defined are included below. The order matters - they're processed top to bottom.
 sb = CustomSkillBuilder(persistence_adapter=s3_adapter)
 
+sb.add_request_handler(CanFulfillIntentRequestHandler())
+
 sb.add_request_handler(ChangePlatformsIntentHandler())
 
 sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(RailjackSentientIntentHandler())
 sb.add_request_handler(CetusTimeIntentHandler())
 sb.add_request_handler(FortunaTimeIntentHandler())
 sb.add_request_handler(VoidTraderTimeIntentHandler())
@@ -899,6 +988,7 @@ sb.add_request_handler(HiveCountIntentHandler())
 sb.add_request_handler(ExcavationCountIntentHandler())
 
 sb.add_request_handler(InvasionsWorthItIntentHandler())
+
 
 sb.add_request_handler(GiveUntoTheVoidIntentHandler())
 sb.add_request_handler(VorIntentHandler())
