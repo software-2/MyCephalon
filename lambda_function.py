@@ -359,7 +359,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Welcome to The Void. If you need help, just say \"help\", otherwise what can I do for you?"
+        speak_output = "Hello! Your Cephalon is here to assist. If you need help, just say \"help\", otherwise what can I do for you?"
 
         return (
             handler_input.response_builder
