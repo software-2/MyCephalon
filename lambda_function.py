@@ -25,7 +25,7 @@ class WarframeAPIQuery:
     def generate_english_time(diff):
         # The general concept here is to avoid "Spock Over-Accuracy"
         if diff.days > 0:
-            sub_hours = (diff.seconds - 86400) / 60 / 60
+            sub_hours = math.floor((diff.seconds - 86400) / 60 / 60)
             plural_day = "days"
             if diff.days == 1:
                 plural_day = "day"
@@ -294,7 +294,9 @@ class WarframeAPIQuery:
             if "sfn" not in railjack_info:
                 return "The Sentient ship is not currently here."
 
-            sfn = int(railjack_info["sfn"])
+            # "{\"sfn\":553}"
+            sfn = railjack_info[len(railjack_info) - 4:]
+            sfn = int(sfn[:-1])
             if sfn == 505:
                 node_name = "Ruse War Field"
             elif sfn == 510:
@@ -312,7 +314,7 @@ class WarframeAPIQuery:
             elif sfn == 555:
                 node_name = "R-9 Cloud"
             else:
-                node_name = "a node I don't know the name of"
+                node_name = sfn
 
             return "The Sentient ship is here! It's located at " + node_name + "."
 
