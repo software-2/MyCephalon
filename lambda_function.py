@@ -280,48 +280,6 @@ class WarframeAPIQuery:
             return "Error grabbing API"
 
 
-    @staticmethod
-    def railjack_sentients(platform):
-        #Not added to the good API yet, so we're using the massive blob
-        url = "http://content.warframe.com/dynamic/worldState.php"
-        if platform != "pc":
-            return "Sorry, Railjack is for beta testers only."
-
-        response = requests.get(url)
-        if response.status_code == 200:
-            parsed_json = json.loads(response.text)
-            railjack_info = parsed_json["Tmp"]
-            if "sfn" not in railjack_info:
-                return "The Sentient ship is not currently here."
-
-            # "{\"sfn\":553}"
-            sfn = railjack_info[len(railjack_info) - 4:]
-            sfn = int(sfn[:-1])
-            if sfn == 505:
-                node_name = "Ruse War Field"
-            elif sfn == 510:
-                node_name = "Gian Point"
-            elif sfn == 550:
-                node_name = "Nsu Grid"
-            elif sfn == 551:
-                node_name = "Ganalen's Grave"
-            elif sfn == 552:
-                node_name = "Rya"
-            elif sfn == 553:
-                node_name = "Flexa"
-            elif sfn == 554:
-                node_name = "H-2 Cloud"
-            elif sfn == 555:
-                node_name = "R-9 Cloud"
-            else:
-                node_name = sfn
-
-            return "The Sentient ship is here! It's located at " + node_name + "."
-
-        else:
-            return "Error grabbing API"
-
-
 def get_platform(handler_input):
     attr = handler_input.attributes_manager.persistent_attributes
 
@@ -694,24 +652,6 @@ class InvasionsWorthItIntentHandler(AbstractRequestHandler):
         )
 
 
-class RailjackSentientIntentHandler(AbstractRequestHandler):
-    """Handler for Railjack Sentients Intent."""
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("RailjackSentientIntent")(handler_input)
-
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        increment_usage_count(handler_input)
-        platform = get_platform(handler_input)
-        speak_output = WarframeAPIQuery.railjack_sentients(platform)
-        return (
-            handler_input.response_builder
-                         .speak(speak_output)
-                         .response
-        )
-
-
 class VorIntentHandler(AbstractRequestHandler):
     """Handler for Vor Intent."""
     def can_handle(self, handler_input):
@@ -969,7 +909,6 @@ sb.add_request_handler(CanFulfillIntentRequestHandler())
 sb.add_request_handler(ChangePlatformsIntentHandler())
 
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(RailjackSentientIntentHandler())
 sb.add_request_handler(CetusTimeIntentHandler())
 sb.add_request_handler(FortunaTimeIntentHandler())
 sb.add_request_handler(VoidTraderTimeIntentHandler())
