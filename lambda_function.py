@@ -279,6 +279,22 @@ class WarframeAPIQuery:
         else:
             return "Error grabbing API"
 
+    @staticmethod
+    def glass_time(platform):
+        # The working theory is every 25 min. Placing this in the API section in anticipation
+        # of a proper API handling this. But for now, using a rough locally calculated time.
+        diff = datetime.utcnow() - datetime(2020, 5, 13, 23, 11)
+        sec_remaining = diff.total_seconds() % (60 * 25)
+        min_remaining = 25 - int(float(sec_remaining)/60)
+        singular1 = "is"
+        singular2 = "minute"
+        if min_remaining != 1:
+            singular1 = "are"
+            singular2 = "minutes"
+
+        return "There " + singular1 + " about " + str(min_remaining) + " " + singular2 + \
+               " until the next chance for glass enemies to spawn."
+
 
 def get_platform(handler_input):
     attr = handler_input.attributes_manager.persistent_attributes
@@ -652,6 +668,24 @@ class InvasionsWorthItIntentHandler(AbstractRequestHandler):
         )
 
 
+class GlassTimeIntentHandler(AbstractRequestHandler):
+    """Handler for Glass Time Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("GlassTimeIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        increment_usage_count(handler_input)
+        platform = get_platform(handler_input)
+        speak_output = WarframeAPIQuery.glass_time(platform)
+        return (
+            handler_input.response_builder
+                         .speak(speak_output)
+                         .response
+        )
+
+
 class VorIntentHandler(AbstractRequestHandler):
     """Handler for Vor Intent."""
     def can_handle(self, handler_input):
@@ -908,6 +942,7 @@ sb.add_request_handler(CanFulfillIntentRequestHandler())
 
 sb.add_request_handler(ChangePlatformsIntentHandler())
 
+sb.add_request_handler(GlassTimeIntentHandler())
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(CetusTimeIntentHandler())
 sb.add_request_handler(FortunaTimeIntentHandler())
